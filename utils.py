@@ -1,89 +1,141 @@
 import os
 
 from typing import Tuple, Dict
+from time import sleep
 
 
-def collect_cpu_usage() -> float:
-    f = open("/proc/stat", "r")
+class MetricsUtils:
+    def __init__(self) -> None:
+        pass
 
-    # extract 1st line, exclude 1st column
-    cpu_info = [float(col) for col in f.readline().strip().split()[1:]]
-    f.close()
+    def collect_cpu_usage(self) -> float:
+        # Read more:
+        # https://stackoverflow.com/questions/9229333/how-to-get-overall-cpu-usage-e-g-57-on-linux
+        # https://www.kgoettler.com/post/proc-stat/
+        # https://rosettacode.org/wiki/Linux_CPU_utilization
+        cpu_usage = float(
+            os.popen(
+                "/usr/bin/top -b -n1 | /usr/bin/grep 'Cpu(s)' | awk '{print $2 + $4}'"
+            )
+            .read()
+            .strip()
+        )
 
-    # Read more:
-    # https://stackoverflow.com/questions/9229333/how-to-get-overall-cpu-usage-e-g-57-on-linux
-    # https://www.kgoettler.com/post/proc-stat/
-    (user, system, idle) = (cpu_info[0], cpu_info[2], cpu_info[3])
+        return cpu_usage
 
-    current_cpu_usage = 100 * (user + system) / (user + system + idle)
+    def collect_system_load(self) -> Tuple[float, float, float]:
+        avg_one_min, avg_five_min, avg_fifteen_min = [
+            float(elem[:-1]) for elem in os.popen("/usr/bin/uptime").read().split()[-3:]
+        ]
 
-    return current_cpu_usage
+        return avg_one_min, avg_five_min, avg_fifteen_min
 
+    def collect_system_up(self) -> str:
+        up_duration = os.popen("/usr/bin/uptime -p").read().strip()
+        up_since = os.popen("/usr/bin/uptime -s").read().strip()
 
-def collect_system_load() -> Tuple[float, float, float]:
-    avg_one_min, avg_five_min, avg_fifteen_min = [
-        float(elem[:-1]) for elem in os.popen("/usr/bin/uptime").read().split()[-3:]
-    ]
+        return up_duration, up_since
 
-    return avg_one_min, avg_five_min, avg_fifteen_min
+    def collect_memory(self) -> Dict[str, int]:
+        """
+        Unit: kB
+        """
+        mem_info = {}
+        selected_mem_metrics = {
+            "MemTotal",
+            "MemFree",
+            "MemAvailable",
+            "Buffers",
+            "Cached",
+            "SReclaimable",
+            "Shmem",
+            "SwapTotal",
+            "SwapFree",
+        }
 
+        f = open("/proc/meminfo", "r")
 
-def collect_system_up() -> str:
-    up_duration = os.popen("/usr/bin/uptime -p").read().strip()
-    up_since = os.popen("/usr/bin/uptime -s").read().strip()
+        for line in f.readlines():
+            metric_name, val = line.split()[:2]
+            if metric_name[:-1] in selected_mem_metrics:
+                mem_info[metric_name[:-1]] = int(val)
 
-    return up_duration, up_since
+        # https://stackoverflow.com/questions/41224738/how-to-calculate-system-memory-usage-from-proc-meminfo-like-htop
+        mem_used = mem_info["MemTotal"] - mem_info["MemFree"]
+        cached_mem = mem_info["Cached"] + mem_info["SReclaimable"] + mem_info["Shmem"]
+        swap = mem_info["SwapTotal"] - mem_info["SwapFree"]
+        non_cached_mem = mem_used - (mem_info["Buffers"] + cached_mem)
 
+        return (
+            mem_used,
+            cached_mem,
+            non_cached_mem,
+            swap,
+            mem_info["Buffers"],
+            mem_info["MemTotal"],
+        )
 
-def collect_memory() -> Dict[str, int]:
-    """
-    Unit: kB
-    """
-    mem_info = {}
-    selected_mem_metrics = {
-        "MemTotal",
-        "MemFree",
-        "MemAvailable",
-        "Buffers",
-        "Cached",
-        "SReclaimable",
-        "Shmem",
-        "SwapTotal",
-        "SwapFree",
-    }
+    def disk_usage(self) -> list[Dict]:
+        """Shows disk usage per drive (in Mb)"""
 
-    f = open("/proc/meminfo", "r")
+        # Filesystem 1M-blocks  Used  Available  Use%  Mounted on
+        raw = [
+            item.strip().split()
+            for item in os.popen("/usr/bin/df -hm").read().splitlines()[1:]
+        ]
 
-    for line in f.readlines():
-        metric_name, val = line.split()[:2]
-        if metric_name[:-1] in selected_mem_metrics:
-            mem_info[metric_name[:-1]] = int(val)
+        disk_usage_per_drive = []
+        for item in raw:
+            curr_disk_usage = {}
 
-    # https://stackoverflow.com/questions/41224738/how-to-calculate-system-memory-usage-from-proc-meminfo-like-htop
-    mem_used = mem_info["MemTotal"] - mem_info["MemFree"]
-    cached_mem = mem_info["Cached"] + mem_info["SReclaimable"] + mem_info["Shmem"]
-    swap = mem_info["SwapTotal"] - mem_info["SwapFree"]
-    non_cached_mem = mem_used - (mem_info["Buffers"] + cached_mem)
+            curr_disk_usage["fs"] = item[0]
+            curr_disk_usage["1M_blocks"] = item[1]
+            curr_disk_usage["used"] = item[2]
+            curr_disk_usage["available"] = item[3]
+            curr_disk_usage["percent_use"] = item[4]
+            curr_disk_usage["mounted_point"] = item[5]
 
-    return mem_used, cached_mem, non_cached_mem, swap, mem_info["Buffers"]
+            disk_usage_per_drive.append(curr_disk_usage)
 
+        return disk_usage_per_drive
 
-def aggregate_metrics() -> Dict:
-    mem_used, cached_mem, non_cached_mem, swap, buffers = collect_memory()
-    cpu_usage = collect_cpu_usage()
-    system_up_duration, system_up_since = collect_system_up()
-    avg_load_one_min, avg_load_five_min, avg_load_fifteen_min = collect_system_load()
+    def aggregate_metrics(self) -> Dict:
+        (
+            mem_used,
+            cached_mem,
+            non_cached_mem,
+            swap,
+            buffers,
+            total_mem,
+        ) = self.collect_memory()
+        cpu_usage = self.collect_cpu_usage()
+        system_up_duration, system_up_since = self.collect_system_up()
+        (
+            avg_load_one_min,
+            avg_load_five_min,
+            avg_load_fifteen_min,
+        ) = self.collect_system_load()
 
-    return {
-        "mem_used": mem_used,
-        "cached_mem": cached_mem,
-        "non_cached_mem": non_cached_mem,
-        "swap": swap,
-        "buffers": buffers,
-        "cpu_usage": cpu_usage,
-        "system_up_duration": system_up_duration,
-        "system_up_since": system_up_since,
-        "avg_load_one_min": avg_load_one_min,
-        "avg_load_five_min": avg_load_five_min,
-        "avg_load_fifteen_min": avg_load_fifteen_min,
-    }
+        disk_usage_per_drive = self.disk_usage()
+
+        return {
+            "mem_used": mem_used,
+            "cached_mem": cached_mem,
+            "non_cached_mem": non_cached_mem,
+            "swap": swap,
+            "buffers": buffers,
+            "total_mem": total_mem,
+            "cpu_usage": cpu_usage,
+            "system_up_duration": system_up_duration,
+            "system_up_since": system_up_since,
+            "avg_load_one_min": avg_load_one_min,
+            "avg_load_five_min": avg_load_five_min,
+            "avg_load_fifteen_min": avg_load_fifteen_min,
+            "disk_usage": disk_usage_per_drive,
+        }
+
+    def collect_machine_info(self) -> Dict:
+        model = os.popen("/usr/bin/cat /sys/class/dmi/id/product_name").read()
+        host_name = os.popen("/usr/bin/cat /proc/sys/kernel/hostname").read()
+
+        return {"model": model, "hostname": host_name}
