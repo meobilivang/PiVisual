@@ -1,8 +1,9 @@
-from flask import Flask, jsonify
+from flask import Flask, jsonify, render_template
 
-from utils import aggregate_metrics
+from utils import MetricsUtils
 
 app = Flask(__name__)
+metrics_utils = MetricsUtils()
 
 
 @app.route("/")
@@ -12,11 +13,21 @@ def main():
 
 @app.route("/api/metrics")
 def metrics():
-    res = aggregate_metrics()
+    data = metrics_utils.aggregate_metrics()
 
-    return jsonify(res)
+    return jsonify(data)
+
+
+@app.route("/api/machine-info")
+def machine_info():
+    data = metrics_utils.collect_machine_info()
+
+    return jsonify(data)
 
 
 @app.route("/dashboard")
 def dash_board():
-    return
+    system_info = metrics_utils.collect_machine_info()
+    metrics = metrics_utils.aggregate_metrics()
+
+    return render_template("dashboard.html", system_info=system_info, metrics=metrics)
