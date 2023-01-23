@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+{% block hostinfo %}
+<div class="container-fluid">
+    <div class="container-fluid bg-primary">
+        <div class="container-fluid p-5">
+            <h3 class="display-4">Host Info:</h3>
+            <hr>
+            <p>Hostname: {{ system_info['hostname'] }}</p>
+            <p>Model: {{ system_info['model'] }}</p>
+        </div>
+    </div>
+</div>
+{% endblock %}
+{% block content %}
+<div class="container-fluid p-4">
+    <div class="container-fluid">
+        <div class="container  p-5">
+            <h3 class="display-4">Metrics</h3>
+            <hr>
+            <div class="container text-center">
+                <div class="row align-items-start">
+                    <div class="col">
+                      <div class="card bg-body-secondary">
+                        <div class="card-block">
+                            <h6 class="m-b-20">CPU:</h6>
+                            <div class="progress" role="progressbar" aria-valuenow="50" aria-valuemin="0" aria-valuemax="100">
+                                <div class="progress-bar progress-bar-striped bg-info" style="width: 85%"></div>
+                              </div>
+                            <h2 class="text-right"><i class="fa fa-cart-plus f-left"></i><span>486</span></h2>
+                            <p class="m-b-0">Completed Orders<span class="f-right">351</span></p>
+                        </div>
+                    </div>
+                    </div>
+                    <div class="col">
+                        <div class="card bg-body-secondary">
+                            <div class="card-block">
+                                <h6 class="m-b-20">Orders Received</h6>
+                                <h2 class="text-right"><i class="fa fa-cart-plus f-left"></i><span>486</span></h2>
+                                <p class="m-b-0">Completed Orders<span class="f-right">351</span></p>
+                            </div>
+                        </div>
+                    </div>
+                  </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
