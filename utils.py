@@ -23,6 +23,17 @@ class MetricsUtils:
 
         return cpu_usage
 
+    def cpu_temp(self) -> int:
+        """Shows CPU temp in Celcius"""
+
+        # refer: https://www.cyberciti.biz/faq/linux-find-out-raspberry-pi-gpu-and-arm-cpu-temperature-command/
+        cpu_temp = (
+            int(os.popen("/usr/bin/cat /sys/class/thermal/thermal_zone0/temp").read())
+            / 1000
+        )
+
+        return round(cpu_temp, 2)
+
     def collect_system_load(self) -> Tuple[float, float, float]:
         avg_one_min, avg_five_min, avg_fifteen_min = [
             float(elem[:-1]) for elem in os.popen("/usr/bin/uptime").read().split()[-3:]
@@ -108,7 +119,10 @@ class MetricsUtils:
             buffers,
             total_mem,
         ) = self.collect_memory()
+
         cpu_usage = self.collect_cpu_usage()
+        cpu_temp = self.cpu_temp()
+
         system_up_duration, system_up_since = self.collect_system_up()
         (
             avg_load_one_min,
@@ -126,6 +140,7 @@ class MetricsUtils:
             "buffers": buffers,
             "total_mem": total_mem,
             "cpu_usage": cpu_usage,
+            "cpu_temp": cpu_temp,
             "system_up_duration": system_up_duration,
             "system_up_since": system_up_since,
             "avg_load_one_min": avg_load_one_min,
