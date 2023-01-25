@@ -27,6 +27,7 @@ class MetricsUtils:
         """Shows CPU temp in Celcius"""
 
         # refer: https://www.cyberciti.biz/faq/linux-find-out-raspberry-pi-gpu-and-arm-cpu-temperature-command/
+        # https://www.kernel.org/doc/Documentation/thermal/sysfs-api.txt
         cpu_temp = (
             int(os.popen("/usr/bin/cat /sys/class/thermal/thermal_zone0/temp").read())
             / 1000
@@ -103,7 +104,7 @@ class MetricsUtils:
             curr_disk_usage["1M_blocks"] = item[1]
             curr_disk_usage["used"] = item[2]
             curr_disk_usage["available"] = item[3]
-            curr_disk_usage["percent_use"] = item[4]
+            curr_disk_usage["percent_use"] = item[4][:-1]
             curr_disk_usage["mounted_point"] = item[5]
 
             disk_usage_per_drive.append(curr_disk_usage)
@@ -136,8 +137,8 @@ class MetricsUtils:
             "mem_used": mem_used,
             "cached_mem": cached_mem,
             "non_cached_mem": non_cached_mem,
-            "swap": swap,
-            "buffers": buffers,
+            "swap_mem": swap,
+            "buffers_mem": buffers,
             "total_mem": total_mem,
             "cpu_usage": cpu_usage,
             "cpu_temp": cpu_temp,
