@@ -1,38 +1,34 @@
-from flask import Flask, jsonify, render_template
-
+from flask import Flask, jsonify, render_template, redirect, url_for
 from utils import MetricsUtils
 from config import config
 
+app = Flask(__name__)
+app.config.from_object(config)
+metrics_utils = MetricsUtils()
 
-def create_app():
 
-    app = Flask(__name__)
+@app.route("/")
+def main():
+    return redirect(url_for("dash_board"))
 
-    app.config.from_object(config)
 
-    metrics_utils = MetricsUtils()
+@app.route("/api/metrics")
+def metrics():
+    data = metrics_utils.aggregate_metrics()
 
-    @app.route("/")
-    def main():
-        return "Hello world!"
+    return jsonify(data)
 
-    @app.route("/api/metrics")
-    def metrics():
-        data = metrics_utils.aggregate_metrics()
 
-        return jsonify(data)
+@app.route("/api/machine-info")
+def machine_info():
+    data = metrics_utils.collect_machine_info()
 
-    @app.route("/api/machine-info")
-    def machine_info():
-        data = metrics_utils.collect_machine_info()
+    return jsonify(data)
 
-        return jsonify(data)
 
-    @app.route("/dashboard")
-    def dash_board():
-        system_info = metrics_utils.collect_machine_info()
-        metrics = metrics_utils.aggregate_metrics()
+@app.route("/dashboard")
+def dash_board():
+    system_info = metrics_utils.collect_machine_info()
+    metrics = metrics_utils.aggregate_metrics()
 
-        return render_template(
-            "dashboard.html", system_info=system_info, metrics=metrics
-        )
+    return render_template("dashboard.html", system_info=system_info, metrics=metrics)
