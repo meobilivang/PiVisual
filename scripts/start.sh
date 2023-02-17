@@ -3,7 +3,7 @@ set -e
 
 if [ -f .venv/bin/activate ]; then
     echo "Starting virtual env..."
-    source .venv/bin/activate
+    source ../.venv/bin/activate
 fi
 
 # runs gunicorn
