@@ -8,6 +8,8 @@
 \/    |_|   \_/ |_|___/\__,_|\__,_|_|
 ```
 
+[![GitHub license](https://img.shields.io/badge/license-Apache-blue.svg)](https://github.com/meobilivang/PiVisual/blob/master/LICENSE)
+
 > A homemade metrics dashboard for `Rasberry Pi`.
 
 ![deployed page](./docs/imgs/page.png)
@@ -125,6 +127,8 @@ $ systemctl restart nginx
 ```
 
 ## :book: Resources
+
+- Got huge inspiration from Chris's [Pidash](`https://github.com/chrisx8/pidash`) :pray:
 
 - [Deploy a Python Flask Restful API app with Gunicorn supervisor and nginx](https://thucnc.medium.com/deploy-a-python-flask-restful-api-app-with-gunicorn-supervisor-and-nginx-62b20d62691f)
 - [Configuring `nginx` for a flask web application](https://www.patricksoftwareblog.com/how-to-configure-nginx-for-a-flask-web-application/)
