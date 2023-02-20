@@ -90,7 +90,7 @@ $ sudo firewall-cmd --zone=public --add-service=http --permanent
 $ firewall-cmd --reload
 ```
 
-- (**If `SELinux` is enabled*) Enable connection to proxied connection `SELinux`
+- (*If `SELinux` is enabled*) Enable connection to proxied connection `SELinux`
 
 ```bash
 $ sudo setsebool httpd_can_network_connect 1 -P
@@ -128,7 +128,7 @@ $ systemctl restart nginx
 
 ## :book: Resources
 
-- Got huge inspiration from Chris's [Pidash](`https://github.com/chrisx8/pidash`) :pray:
+- Got huge inspiration from Chris's [Pidash](https://github.com/chrisx8/pidash) :pray:
 
 - [Deploy a Python Flask Restful API app with Gunicorn supervisor and nginx](https://thucnc.medium.com/deploy-a-python-flask-restful-api-app-with-gunicorn-supervisor-and-nginx-62b20d62691f)
 - [Configuring `nginx` for a flask web application](https://www.patricksoftwareblog.com/how-to-configure-nginx-for-a-flask-web-application/)
