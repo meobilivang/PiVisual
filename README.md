@@ -66,7 +66,7 @@ $ ln -s /home/pnguyen/PiVisual/deploy/supervisor/pi-visual.ini /etc/supervisor/c
 # refer to: http://supervisord.org/configuration.html#program-x-section-settings
 user=pnguyen
 directory=/home/pnguyen/PiVisual                          ; set to your own path
-command=/home/pnguyen/PiVisual/.venv/bin/gunicorn app:app -b 0.0.0.0:5000       ; set to your own path
+command=/home/pnguyen/PiVisual/.venv/bin/gunicorn app:app -c /home/pnguyen/PiVisual/gunicorn.py       ; set to your own path
 autorestart=true
 autorestart=true        ; runs on startup
 startretries=3
